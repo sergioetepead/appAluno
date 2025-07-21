@@ -118,13 +118,24 @@ class ETEPApp {
     }
 
     navigateToPortal() {
-        // InAppBrowser com barra personalizada
+        // InAppBrowser com barra branca personalizada - todas as opções disponíveis
         const url = 'https://etepead.jacad.com.br/academico/aluno-v2/login';
         const target = '_blank';
-        const options = 'location=no,zoom=no,hardwareback=yes,toolbar=yes,closebuttoncaption=Voltar';
+        const options = [
+            'location=yes',
+            'zoom=no', 
+            'hardwareback=yes',
+            'toolbar=yes',
+            'toolbarposition=top',
+            'toolbarcolor=#ffffff',           // Barra branca
+            'navigationbuttoncolor=#252e62',  // Botões azul (cor do CSS)
+            'closebuttoncaption=Voltar',      // Texto do botão
+            'closebuttoncolor=#252e62',       // Cor do botão voltar
+            'footercolor=#ffffff'             // Footer branco
+        ].join(',');
         
         if (window.cordova && cordova.InAppBrowser) {
-            console.log('Abrindo InAppBrowser:', url);
+            console.log('Abrindo InAppBrowser personalizado:', url);
             cordova.InAppBrowser.open(url, target, options);
         } else {
             console.log('Cordova não disponível, usando fallback');
