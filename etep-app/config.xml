@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.etep.portal" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Portal ETEP</name>
+    <description>Portal do Aluno ETEP</description>
+    <author email="dev@etep.com.br" href="https://etep.com.br">
+        ETEP Team
+    </author>
+    <content src="index.html" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-navigation href="https://etepead.jacad.com.br/*" />
+    <allow-navigation href="https://public.etepead.com.br/*" />
+    
+    <platform name="android">
+        <preference name="AndroidLaunchMode" value="singleTop" />
+        <preference name="AndroidHardwareAcceleration" value="true" />
+        <preference name="SplashMaintainAspectRatio" value="true" />
+    </platform>
+    
+    <plugin name="cordova-plugin-inappbrowser" spec="^6.0.0" />
+    <plugin name="cordova-plugin-device" spec="^3.0.0" />
+</widget>

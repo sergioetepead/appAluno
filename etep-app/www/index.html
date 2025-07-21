@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, please refer to the docs:
+            https://cordova.apache.org/docs/en/latest/
+        Some notes:
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: https://ssl.gstatic.com https://public.etepead.com.br https://etepead.jacad.com.br https://*.jacad.com.br https://fonts.googleapis.com https://fonts.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; media-src *; img-src 'self' data: content: https:; frame-src https://*.jacad.com.br https://etepead.jacad.com.br https:;">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+        <meta name="color-scheme" content="light dark">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/index.css">
+        <title>Portal ETEP</title>
+    </head>
+    <body>
+        <div id="app">
+            <!-- Tela 1 - Home -->
+            <div id="home-screen" class="screen active">
+                <div class="container">
+                    <img src="https://public.etepead.com.br/LogoEtepNovo.png" alt="Logo ETEP" class="logo">
+                    <div class="input-container">
+                        <input type="text" id="cpf-input" placeholder="Digite seu CPF" maxlength="14">
+                        <button id="confirm-btn" class="btn-primary">Confirmar</button>
+                    </div>
+                    <div class="version-info">
+                        <span id="version-display">v1.0.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tela 2 - Menu -->
+            <div id="menu-screen" class="screen">
+                <div class="container">
+                    <img src="https://public.etepead.com.br/LogoEtepNovo.png" alt="Logo ETEP" class="logo-small">
+                    <h2>Portal ETEP</h2>
+                    <div class="menu-buttons">
+                        <button id="portal-btn" class="menu-button active">Portal do Aluno</button>
+                        <button class="menu-button disabled">Comprovante de Matrícula</button>
+                        <button class="menu-button disabled">Link de Pagamento</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tela 3 - Portal WebView -->
+            <div id="portal-screen" class="screen">
+                <div class="header">
+                    <img src="https://public.etepead.com.br/LogoEtepNovo.png" alt="Logo ETEP" class="header-logo">
+                    <button id="back-btn" class="back-button">← Voltar</button>
+                </div>
+                <div class="webview-container">
+                    <iframe 
+                        id="portal-iframe" 
+                        src="https://etepead.jacad.com.br/academico/aluno-v2/login"
+                        title="Portal do Aluno">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+        <script src="cordova.js"></script>
+        <script src="js/index.js"></script>
+    </body>
+</html>
