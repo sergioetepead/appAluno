@@ -114,43 +114,92 @@ class AuthService {
                 const url = event.url;
                 console.log('Navegando para:', url);
 
-                // Detectar se login foi bem sucedido (mudança de URL)
-                if (url && !url.includes('/login') && url.includes('jacad.com.br')) {
-                    console.log('Login bem sucedido! URL:', url);
-                    AuthService.saveCredentials(cpf, password);
-                    AuthService.isAuthenticated = true;
-                    testBrowser.close();
-                    clearTimeout(timeoutId);
-                    resolve(true);
-                }
-
-                // Detectar erro de login (volta para login com erro)
-                if (url && url.includes('/login') && loginAttempted) {
-                    // Aguardar um pouco para ver se há mensagem de erro
-                    setTimeout(() => {
-                        testBrowser.executeScript({
-                            code: `
-                                var errorMessage = document.querySelector('.alert-danger') ||
-                                                 document.querySelector('.error') ||
-                                                 document.querySelector('[class*="erro"]') ||
-                                                 document.querySelector('[class*="invalid"]');
+                // Aguardar carregar e verificar conteúdo da página
+                setTimeout(() => {
+                    testBrowser.executeScript({
+                        code: `
+                            // Verificar se ainda está na página de login
+                            var isLoginPage = document.querySelector('#cpf') || 
+                                            document.querySelector('#usuario') || 
+                                            document.querySelector('#login') ||
+                                            document.querySelector('input[name="cpf"]') ||
+                                            document.querySelector('input[name="usuario"]');
+                            
+                            // Verificar se há mensagem de erro
+                            var errorMessage = document.querySelector('.alert-danger') ||
+                                             document.querySelector('.error') ||
+                                             document.querySelector('.alert') ||
+                                             document.querySelector('[class*="erro"]') ||
+                                             document.querySelector('[class*="invalid"]') ||
+                                             document.querySelector('[class*="danger"]');
+                            
+                            // Verificar se há elementos que indicam sucesso de login
+                            var hasUserMenu = document.querySelector('.user-menu') ||
+                                            document.querySelector('.dropdown-user') ||
+                                            document.querySelector('.navbar-user') ||
+                                            document.querySelector('[class*="user"]') ||
+                                            document.querySelector('.logout') ||
+                                            document.querySelector('a[href*="logout"]');
+                            
+                            var hasPortalContent = document.querySelector('.portal-content') ||
+                                                 document.querySelector('.dashboard') ||
+                                                 document.querySelector('.main-content') ||
+                                                 document.querySelector('#main') ||
+                                                 document.querySelector('.content');
+                            
+                            var result = {
+                                url: window.location.href,
+                                isLoginPage: !!isLoginPage,
+                                hasError: errorMessage ? errorMessage.textContent.trim() : null,
+                                hasUserMenu: !!hasUserMenu,
+                                hasPortalContent: !!hasPortalContent,
+                                title: document.title
+                            };
+                            
+                            JSON.stringify(result);
+                        `
+                    }, (scriptResult) => {
+                        if (scriptResult && scriptResult[0]) {
+                            try {
+                                const pageInfo = JSON.parse(scriptResult[0]);
+                                console.log('Info da página:', pageInfo);
                                 
-                                if (errorMessage && errorMessage.textContent.trim()) {
-                                    'ERROR: ' + errorMessage.textContent.trim();
-                                } else {
-                                    'NO_ERROR_MESSAGE';
+                                // Login bem sucedido: não está mais na página de login E tem elementos do portal
+                                if (!pageInfo.isLoginPage && (pageInfo.hasUserMenu || pageInfo.hasPortalContent)) {
+                                    console.log('Login bem sucedido!');
+                                    AuthService.saveCredentials(cpf, password);
+                                    AuthService.isAuthenticated = true;
+                                    testBrowser.close();
+                                    clearTimeout(timeoutId);
+                                    resolve(true);
+                                    return;
                                 }
-                            `
-                        }, (result) => {
-                            if (result && result[0] && result[0].startsWith('ERROR:')) {
-                                console.log('Login falhou:', result[0]);
-                                testBrowser.close();
-                                clearTimeout(timeoutId);
-                                resolve(false);
+                                
+                                // Login falhou: ainda na página de login OU há mensagem de erro
+                                if (pageInfo.isLoginPage && pageInfo.hasError && loginAttempted) {
+                                    console.log('Login falhou:', pageInfo.hasError);
+                                    testBrowser.close();
+                                    clearTimeout(timeoutId);
+                                    resolve(false);
+                                    return;
+                                }
+                                
+                                // Se ainda na página de login após 5 segundos do login, considerar falha
+                                if (pageInfo.isLoginPage && loginAttempted) {
+                                    setTimeout(() => {
+                                        console.log('Login falhou: ainda na página de login após 5s');
+                                        testBrowser.close();
+                                        clearTimeout(timeoutId);
+                                        resolve(false);
+                                    }, 5000);
+                                }
+                                
+                            } catch (e) {
+                                console.log('Erro ao processar info da página:', e);
                             }
-                        });
-                    }, 2000);
-                }
+                        }
+                    });
+                }, 2000);
             });
 
             // Timeout de segurança (30 segundos)
@@ -269,6 +318,6 @@ class AuthService {
      * Verifica se está autenticado
      */
     static isLoggedIn() {
-        return this.isAuthenticated && this.hiddenBrowser !== null;
+        return this.isAuthenticated && this.savedCredentials !== null;
     }
 }
