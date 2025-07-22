@@ -1,0 +1,63 @@
+💠 Estrutura Funcional
+Tela 1 – Home
+
+Tela centralizada com o logo da instituição (https://public.etepead.com.br/LogoEtepNovo.png)
+
+Campo de texto simples para digitar o CPF (sem validação)
+
+Ao digitar o CPF e apertar Enter ou Confirmar, navegar para a próxima tela
+
+Tela 2 – Menu
+
+Exibir três botões:
+
+Portal do Aluno (ativo)
+
+Comprovante de Matrícula (desabilitado)
+
+Link de Pagamento (desabilitado)
+
+Ao clicar no botão Portal do Aluno, abrir uma nova tela com o portal carregado via WebView nativo
+
+Tela 3 – Portal WebView
+
+WebView nativo embutido com URL:
+https://etepead.jacad.com.br/academico/aluno-v2/login
+
+Topo da tela com barra branca contendo:
+
+Logo pequeno à esquerda (mesma URL de antes)
+
+Botão “Voltar” que leva de volta à tela de Menu
+
+📦 Requisitos técnicos
+App nativo Android usando Apache Cordova
+
+WebView nativo para resolver problema de X-Frame-Options do portal Jacad
+
+HTML/CSS/JS vanilla dentro do container Cordova
+
+Código organizado: www/, platforms/, plugins/
+
+Geração de APK instalável para testes
+
+Deve funcionar 100% offline (sem backend por enquanto)
+
+Preparado para Google Play Store (futuro)
+
+🛠 Preparado para expansão (V2)
+O projeto deve ser estruturado para permitir fácil expansão futura:
+
+Armazenar o CPF digitado em localStorage (WebView) ou SharedPreferences (nativo)
+
+Estrutura preparada para uso de UserContext ou estado global simples
+
+Ponto de entrada planejado para consumo futuro de APIs (por exemplo: /api/login-link?cpf=...)
+
+Pensar que na V2 o CPF poderá ser usado para:
+
+Autenticação com backend
+
+Gerar login automático no portal Jacad (caso viável)
+
+Habilitar botões de comprovante e pagamento dinamicamente

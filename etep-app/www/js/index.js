@@ -1,35 +1,47 @@
+/**
+ * Aplicação principal - apenas lógica de UI e navegação
+ */
 class ETEPApp {
     constructor() {
         this.currentScreen = 'home';
-        this.version = '1.0.0';
-        this.build = 1;
+        this.version = '1.0.0';  // Padrão, será sobrescrito pelo version.json
+        this.build = 1;          // Padrão, será sobrescrito pelo version.json
     }
 
     init() {
         this.setupEventListeners();
-        this.loadStoredCPF();
         this.loadVersionInfo();
     }
 
     setupEventListeners() {
         const cpfInput = document.getElementById('cpf-input');
-        const confirmBtn = document.getElementById('confirm-btn');
+        const passwordInput = document.getElementById('password-input');
+        const loginBtn = document.getElementById('login-btn');
         const portalBtn = document.getElementById('portal-btn');
         const backBtn = document.getElementById('back-btn');
+        const logoutBtn = document.getElementById('logout-btn');
 
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => this.handleCPFSubmit());
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => this.handleLoginSubmit());
         }
 
         if (cpfInput) {
             cpfInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    this.handleCPFSubmit();
+                    passwordInput?.focus();
                 }
             });
 
             cpfInput.addEventListener('input', (e) => {
-                this.formatCPF(e.target);
+                CPFUtils.applyMask(e.target);
+            });
+        }
+
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleLoginSubmit();
+                }
             });
         }
 
@@ -41,44 +53,70 @@ class ETEPApp {
             backBtn.addEventListener('click', () => this.navigateToMenu());
         }
 
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.handleLogout());
+        }
+
         document.addEventListener('backbutton', () => this.handleBackButton(), false);
     }
 
-    formatCPF(input) {
-        let value = input.value.replace(/\D/g, '');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        input.value = value;
-    }
-
-    handleCPFSubmit() {
+    async handleLoginSubmit() {
         const cpfInput = document.getElementById('cpf-input');
+        const passwordInput = document.getElementById('password-input');
         const cpf = cpfInput.value.trim();
+        const password = passwordInput.value.trim();
         
-        if (cpf.length > 0) {
-            this.storeCPF(cpf);
-            this.navigateToMenu();
-        } else {
-            this.showAlert('Por favor, digite um CPF válido.');
+        if (cpf.length === 0) {
+            this.showAlert('Por favor, digite seu CPF.');
             cpfInput.focus();
+            return;
+        }
+        
+        if (password.length === 0) {
+            this.showAlert('Por favor, digite sua senha.');
+            passwordInput.focus();
+            return;
+        }
+        
+        // Mostrar loading
+        this.showLoading(true);
+        
+        try {
+            console.log('Tentando validar credenciais...');
+            const isValid = await AuthService.validateCredentials(cpf, password);
+            
+            if (isValid) {
+                console.log('Credenciais válidas! Navegando para menu...');
+                StorageUtils.saveCPF(cpf);
+                this.showLoading(false);
+                this.navigateToMenu();
+            } else {
+                console.log('Credenciais inválidas');
+                this.showLoading(false);
+                this.showAlert('CPF ou senha incorretos. Tente novamente.');
+                passwordInput.focus();
+            }
+        } catch (error) {
+            console.error('Erro na validação:', error);
+            this.showLoading(false);
+            this.showAlert('Erro de conexão. Verifique sua internet e tente novamente.');
         }
     }
 
-    storeCPF(cpf) {
-        localStorage.setItem('etep_cpf', cpf);
-    }
-
-    loadStoredCPF() {
-        const storedCPF = localStorage.getItem('etep_cpf');
-        const cpfInput = document.getElementById('cpf-input');
-        if (storedCPF && cpfInput) {
-            cpfInput.value = storedCPF;
+    showLoading(show) {
+        const loadingContainer = document.getElementById('loading-container');
+        const inputContainer = document.querySelector('.input-container');
+        
+        if (show) {
+            loadingContainer?.classList.remove('hidden');
+            if (inputContainer) inputContainer.style.opacity = '0.5';
+        } else {
+            loadingContainer?.classList.add('hidden');
+            if (inputContainer) inputContainer.style.opacity = '1';
         }
     }
 
     loadVersionInfo() {
-        // Tentar carregar versão do arquivo JSON
         fetch('version.json')
             .then(response => response.json())
             .then(data => {
@@ -87,7 +125,6 @@ class ETEPApp {
                 this.updateVersionDisplay();
             })
             .catch(() => {
-                // Se falhar, usar versão padrão
                 this.updateVersionDisplay();
             });
     }
@@ -118,29 +155,53 @@ class ETEPApp {
     }
 
     navigateToPortal() {
-        // InAppBrowser com barra branca personalizada - todas as opções disponíveis
-        const url = 'https://etepead.jacad.com.br/academico/aluno-v2/login';
-        const target = '_blank';
-        const options = [
-            'location=yes',
-            'zoom=no', 
-            'hardwareback=yes',
-            'toolbar=yes',
-            'toolbarposition=top',
-            'toolbarcolor=#ffffff',           // Barra branca
-            'navigationbuttoncolor=#252e62',  // Botões azul (cor do CSS)
-            'closebuttoncaption=Voltar',      // Texto do botão
-            'closebuttoncolor=#252e62',       // Cor do botão voltar
-            'footercolor=#ffffff'             // Footer branco
-        ].join(',');
+        console.log('navigateToPortal chamado');
+        console.log('AuthService.isLoggedIn():', AuthService.isLoggedIn());
         
-        if (window.cordova && cordova.InAppBrowser) {
-            console.log('Abrindo InAppBrowser personalizado:', url);
-            cordova.InAppBrowser.open(url, target, options);
+        if (AuthService.isLoggedIn()) {
+            console.log('Usuário autenticado, tentando mostrar portal...');
+            const browserRef = AuthService.showAuthenticatedBrowser();
+            
+            if (browserRef) {
+                console.log('Browser reference obtida, configurando listeners...');
+                // Listener para quando fechar o browser
+                browserRef.addEventListener('exit', () => {
+                    console.log('Portal fechado pelo usuário');
+                });
+                
+                browserRef.addEventListener('loadstop', () => {
+                    console.log('Portal carregado com sucesso');
+                });
+                
+                browserRef.addEventListener('loaderror', (event) => {
+                    console.log('Erro ao carregar portal:', event);
+                });
+            } else {
+                console.log('Falha ao obter browser reference');
+                this.showAlert('Erro ao abrir portal. Tente fazer login novamente.');
+            }
         } else {
-            console.log('Cordova não disponível, usando fallback');
-            this.navigateToScreen('portal');
+            console.log('Não autenticado, redirecionando para home');
+            this.showAlert('Sessão expirada. Faça login novamente.');
+            this.handleLogout();
         }
+    }
+
+    handleLogout() {
+        // Limpar sessão de autenticação
+        AuthService.cleanup();
+        
+        // Limpar CPF salvo e voltar para home
+        StorageUtils.clearCPF();
+        
+        // Limpar campos na home
+        const cpfInput = document.getElementById('cpf-input');
+        const passwordInput = document.getElementById('password-input');
+        if (cpfInput) cpfInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+        
+        // Navegar para home
+        this.navigateToScreen('home');
     }
 
     handleBackButton() {

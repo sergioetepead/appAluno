@@ -6,6 +6,7 @@
         ETEP Team
     </author>
     <content src="index.html" />
+    <icon src="icon.png" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-navigation href="https://etepead.jacad.com.br/*" />
@@ -14,7 +15,19 @@
     <platform name="android">
         <preference name="AndroidLaunchMode" value="singleTop" />
         <preference name="AndroidHardwareAcceleration" value="true" />
-        <preference name="SplashMaintainAspectRatio" value="true" />
+        
+        <!-- Splash Screen - Nova sintaxe -->
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="icon.png" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#ffffff" />
+        <preference name="SplashScreenDelay" value="2000" />
+        
+        <!-- App Icons -->
+        <icon src="icon.png" density="ldpi" />
+        <icon src="icon.png" density="mdpi" />
+        <icon src="icon.png" density="hdpi" />
+        <icon src="icon.png" density="xhdpi" />
+        <icon src="icon.png" density="xxhdpi" />
+        <icon src="icon.png" density="xxxhdpi" />
     </platform>
     
     <plugin name="cordova-plugin-inappbrowser" spec="^6.0.0" />

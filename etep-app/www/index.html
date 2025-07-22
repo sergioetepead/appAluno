@@ -47,7 +47,12 @@
                     <img src="https://public.etepead.com.br/LogoEtepNovo.png" alt="Logo ETEP" class="logo">
                     <div class="input-container">
                         <input type="text" id="cpf-input" placeholder="Digite seu CPF" maxlength="14">
-                        <button id="confirm-btn" class="btn-primary">Confirmar</button>
+                        <input type="password" id="password-input" placeholder="Digite sua senha">
+                        <button id="login-btn" class="btn-primary">Entrar</button>
+                    </div>
+                    <div id="loading-container" class="loading-container hidden">
+                        <div class="spinner"></div>
+                        <span>Validando credenciais...</span>
                     </div>
                     <div class="version-info">
                         <span id="version-display">v1.0.0</span>
@@ -64,6 +69,7 @@
                         <button id="portal-btn" class="menu-button active">Portal do Aluno</button>
                         <button class="menu-button disabled">Comprovante de Matrícula</button>
                         <button class="menu-button disabled">Link de Pagamento</button>
+                        <button id="logout-btn" class="menu-button logout">Sair</button>
                     </div>
                 </div>
             </div>
@@ -84,6 +90,10 @@
             </div>
         </div>
         <script src="cordova.js"></script>
+        <script src="js/utils/cpf.js"></script>
+        <script src="js/utils/storage.js"></script>
+        <script src="js/services/portal.js"></script>
+        <script src="js/services/auth.js"></script>
         <script src="js/index.js"></script>
     </body>
 </html>
