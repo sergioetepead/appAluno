@@ -1,63 +1,228 @@
-💠 Estrutura Funcional
-Tela 1 – Home
+# 📱 Portal ETEP - Especificação Técnica Completa
 
-Tela centralizada com o logo da instituição (https://public.etepead.com.br/LogoEtepNovo.png)
+## 🎯 Versão Atual: v1.4.3
 
-Campo de texto simples para digitar o CPF (sem validação)
+### 💠 Arquitetura e Tecnologias
 
-Ao digitar o CPF e apertar Enter ou Confirmar, navegar para a próxima tela
+**Plataforma Base:**
+- Apache Cordova (PhoneGap) para Android
+- HTML5 + CSS3 + JavaScript ES6+ vanilla
+- InAppBrowser Plugin v6.0.0 para WebViews customizadas
+- Git para controle de versão
 
-Tela 2 – Menu
+**Estrutura de Arquivos:**
+```
+etep-app/
+├── config.xml           # Configuração Cordova, plugins, ícones
+├── www/                 # App web principal
+│   ├── index.html       # Interface das 3 telas
+│   ├── css/index.css    # Estilos responsive + tema ETEP
+│   ├── js/
+│   │   ├── index.js     # App principal (ETEPApp class)
+│   │   ├── services/    # Serviços modulares
+│   │   │   ├── auth.js  # AuthService - validação Jacad
+│   │   │   └── portal.js # PortalService - gerenciamento WebView
+│   │   └── utils/       # Utilitários
+│   │       ├── cpf.js   # CPFUtils - formatação/validação
+│   │       └── storage.js # StorageUtils - localStorage
+│   └── version.json     # Single source of truth para versões
+├── platforms/           # Código nativo gerado (Android)
+└── plugins/            # Plugins Cordova instalados
+```
 
-Exibir três botões:
+**Dependências:**
+- Node.js + npm (ambiente)
+- Android SDK + Java JDK 17
+- Gradle para builds Android
+- Cordova CLI global
 
-Portal do Aluno (ativo)
+---
 
-Comprovante de Matrícula (desabilitado)
+## 🔐 Sistema de Autenticação
 
-Link de Pagamento (desabilitado)
+### Fluxo Principal:
+1. **Home**: Usuário digita CPF + Senha
+2. **Validação**: InAppBrowser oculto testa credenciais no Jacad
+3. **Sucesso**: Navega para Menu + salva credenciais em memória
+4. **Portal**: Novo InAppBrowser com auto-login das credenciais salvas
 
-Ao clicar no botão Portal do Aluno, abrir uma nova tela com o portal carregado via WebView nativo
+### Classe AuthService (auth.js):
+```javascript
+// Métodos principais:
+validateCredentials(cpf, password) // Validação oculta via Jacad
+saveCredentials(cpf, password)     // Armazena em memória
+showAuthenticatedBrowser()         // Cria browser com auto-login
+isLoggedIn()                      // Verifica autenticação
+cleanup()                         // Limpa sessão
+```
 
-Tela 3 – Portal WebView
+**Lógica de Validação:**
+- Browser oculto acessa Jacad
+- Preenche CPF/senha automaticamente
+- Verifica se saiu da página de login E tem elementos do portal
+- Considera falha se fica 5s+ na página de login
+- Detecta mensagens de erro
+- Rejeita senhas incorretas corretamente
 
-WebView nativo embutido com URL:
-https://etepead.jacad.com.br/academico/aluno-v2/login
+**Edge Cases Identificados:**
+- ✅ Sessão ativa prévia no Jacad ("você já está logado")
+- ⏳ Timeout de rede/conexão lenta
+- ⏳ Mudanças na estrutura HTML do Jacad
 
-Topo da tela com barra branca contendo:
+---
 
-Logo pequeno à esquerda (mesma URL de antes)
+## 🎨 Interface e UX
 
-Botão “Voltar” que leva de volta à tela de Menu
+### Tela 1 - Home (Login):
+- Logo ETEP centralizado
+- Campos: CPF (com máscara) + Senha
+- Botão "Entrar" com validação
+- Loading spinner durante autenticação
+- Versão do app (dinâmica via version.json)
 
-📦 Requisitos técnicos
-App nativo Android usando Apache Cordova
+### Tela 2 - Menu:
+- Logo pequeno + título "Portal ETEP"
+- Botões: Portal do Aluno (ativo), outros (desabilitados)
+- Botão "Sair" (logout + volta para Home)
 
-WebView nativo para resolver problema de X-Frame-Options do portal Jacad
+### Tela 3 - Portal:
+- InAppBrowser com barra branca personalizada
+- Botões azuis (#252e62) + "Voltar" customizado
+- Auto-login transparente para o usuário
 
-HTML/CSS/JS vanilla dentro do container Cordova
+**Design System:**
+- Cores: Branco + Azul ETEP (#252e62)
+- Font: Open Sans (Google Fonts)
+- Responsive design para múltiplos tamanhos
+- Animações CSS suaves
 
-Código organizado: www/, platforms/, plugins/
+---
 
-Geração de APK instalável para testes
+## 📱 Configuração Nativa
 
-Deve funcionar 100% offline (sem backend por enquanto)
+### Android (config.xml):
+- Package: com.etep.portal
+- Ícone: icon.png (múltiplas densidades)
+- Splash screen branco com logo
+- Permissões: Internet, Network State
+- Target SDK: Android API 34+
 
-Preparado para Google Play Store (futuro)
+### Plugins Cordova:
+- cordova-plugin-inappbrowser: WebViews customizadas
+- cordova-plugin-device: Info do dispositivo
 
-🛠 Preparado para expansão (V2)
-O projeto deve ser estruturado para permitir fácil expansão futura:
+---
 
-Armazenar o CPF digitado em localStorage (WebView) ou SharedPreferences (nativo)
+## 🗂️ Gerenciamento de Estado
 
-Estrutura preparada para uso de UserContext ou estado global simples
+### ETEPApp (index.js):
+```javascript
+class ETEPApp {
+  constructor()           // Inicialização
+  init()                 // Setup listeners + versão
+  handleLoginSubmit()    // Fluxo de login
+  navigateToPortal()     // Abertura do portal
+  handleLogout()         // Limpeza + volta ao início
+  showLoading()          // UI feedback
+}
+```
 
-Ponto de entrada planejado para consumo futuro de APIs (por exemplo: /api/login-link?cpf=...)
+### Dados Persistidos:
+- **localStorage**: CPF (para auto-preenchimento)
+- **Memória**: Credenciais validadas (temporário)
+- **Sessão**: Estado de autenticação ativo
 
-Pensar que na V2 o CPF poderá ser usado para:
+---
 
-Autenticação com backend
+## 🚀 Build e Deploy
 
-Gerar login automático no portal Jacad (caso viável)
+### Comandos Principais:
+```bash
+# Desenvolvimento
+cordova platform add android
+cordova build android
+cordova run android
 
-Habilitar botões de comprovante e pagamento dinamicamente
+# Release
+cordova build android --release
+```
+
+### Versionamento:
+- version.json como single source of truth
+- Git tags para releases
+- Commits semânticos com co-author Claude
+
+---
+
+## 🔄 Fluxos de Usuário
+
+### Primeiro Acesso:
+1. Abre app → Tela Home
+2. Digita CPF/senha → Loading
+3. Sistema valida no Jacad (oculto)
+4. Sucesso → Menu
+5. Clica Portal → InAppBrowser com auto-login
+
+### Acessos Seguintes:
+1. CPF auto-preenchido (localStorage)
+2. Usuário só digita senha
+3. Mesma validação + navegação
+
+### Logout:
+1. Clica "Sair" no Menu
+2. Limpa credenciais + CPF
+3. Volta para Home (campos vazios)
+
+---
+
+## 🐛 Troubleshooting
+
+### Problemas Conhecidos:
+- **Gradle wrapper**: Resolvido com install manual
+- **Java version**: Exige JDK 17 LTS
+- **CRLF warnings**: Cosmético (Windows/Git)
+- **Sessão Jacad ativa**: Edge case identificado
+
+### Logs Importantes:
+- Browser console para validação
+- Cordova device logs
+- Git commit history preservado
+
+---
+
+## 📋 Roadmap Futuro
+
+### V2 Planejado:
+- [ ] Backend próprio para autenticação
+- [ ] Comprovante de Matrícula ativo
+- [ ] Link de Pagamento ativo  
+- [ ] Push notifications
+- [ ] Offline mode avançado
+- [ ] Google Play Store release
+
+### Melhorias Técnicas:
+- [ ] Testes automatizados
+- [ ] CI/CD pipeline
+- [ ] Monitoramento de erros
+- [ ] Analytics de uso
+- [ ] Detecção de mudanças no Jacad
+
+---
+
+## 👥 Equipe e Handoff
+
+**Desenvolvido por**: Claude Code + Sergio (ETEP)
+**Repositório**: https://github.com/sergioetepead/appAluno.git
+**Branch principal**: master
+**Última versão estável**: v1.4.3
+
+**Para continuidade**:
+- Clone do repo + npm install
+- Android SDK configurado
+- Credenciais de teste do Jacad
+- Acesso ao GitHub do projeto
+
+**Contato técnico**: 
+- Issues no GitHub
+- Documentação no próprio código
+- Commits descritivos para contexto
